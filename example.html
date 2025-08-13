@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>نظام المتابعة الجيومكانية</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.33/esri/themes/light/main.css" />
+  <link rel="stylesheet" href="src/gis-explorer.css">
+</head>
+
+<body>
+  <div id="app">
+    <!-- Map Container -->
+    <div id="displayMap"></div>
+
+    <!-- App Title -->
+    <div id="appTitle" class="app-title">
+      <div class="title-content">
+        <h1>متابعة الإنجاز</h1>
+        <p>مشروع المياه نزع التعاون</p>
+      </div>
+    </div>
+
+    <!-- Upload Widget -->
+    <div id="uploadWidget" class="upload-widget">
+      <button id="uploadToggle" class="upload-toggle">
+        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7,10 12,5 17,10"></polyline>
+          <line x1="12" y1="5" x2="12" y2="15"></line>
+        </svg>
+        Upload Shapefile
+      </button>
+
+      <div id="uploadPanel" class="upload-panel hidden">
+        <div class="upload-header">
+          <h3>Upload Files</h3>
+          <button id="closeUpload" class="close-btn">&times;</button>
+        </div>
+
+        <!-- Upload Tabs -->
+        <div class="upload-tabs">
+          <button class="upload-tab active" data-tab="shapefile">Shapefile</button>
+          <button class="upload-tab" data-tab="geojson">GeoJSON</button>
+        </div>
+
+        <!-- Shapefile Tab Content -->
+        <div class="upload-tab-content active" id="shapefileTab">
+          <div id="dropZone" class="drop-zone">
+            <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14,2 14,8 20,8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10,9 9,9 8,9"></polyline>
+            </svg>
+            <h4>Drag & Drop your shapefile here</h4>
+            <p>or click to browse</p>
+            <input type="file" id="fileInput" accept=".zip" hidden>
+          </div>
+
+          <div class="upload-info">
+            <p><strong>Requirements:</strong></p>
+            <ul>
+              <li>File must be a ZIP archive</li>
+              <li>Must contain .shp, .shx, .dbf files</li>
+              <li>Maximum size: 50MB</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- GeoJSON Tab Content -->
+        <div class="upload-tab-content" id="geojsonTab">
+          <div id="dropZoneGeoJSON" class="drop-zone">
+            <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14,2 14,8 20,8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10,9 9,9 8,9"></polyline>
+            </svg>
+            <h4>Drag & Drop your GeoJSON here</h4>
+            <p>or click to browse</p>
+            <input type="file" id="fileInputGeoJSON" accept=".json,.geojson" hidden>
+          </div>
+
+          <div class="upload-info">
+            <p><strong>Requirements:</strong></p>
+            <ul>
+              <li>File must be .json or .geojson</li>
+              <li>Must contain valid GeoJSON data</li>
+              <li>Maximum size: 50MB</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Status (shared between both tabs) -->
+        <div id="uploadStatus" class="upload-status"></div>
+      </div>
+    </div>
+
+    <!-- Custom Widgets -->
+    <div class="custom-widgets">
+      <button id="layerListToggle" class="custom-widget" title="قائمة الطبقات">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path
+            d="M12,16L19.36,10.27L21,9L12,2L3,9L4.63,10.27M12,18.54L4.62,12.81L3,14.07L12,21.07L21,14.07L19.37,12.8L12,18.54Z" />
+        </svg>
+      </button>
+
+      <button id="fullscreenToggle" class="custom-widget" title="ملء الشاشة">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+          </path>
+        </svg>
+      </button>
+
+      <button id="zoomInBtn" class="custom-widget" title="تكبير">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+          <line x1="11" y1="8" x2="11" y2="14"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      </button>
+
+      <button id="zoomOutBtn" class="custom-widget" title="تصغير">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      </button>
+
+      <button id="homeBtn" class="custom-widget" title="العودة للموقع الأصلي">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9,22 9,12 15,12 15,22"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Coordinates Widget -->
+    <div id="coordinatesWidget" class="coordinates-widget">
+      <span class="coordinates-text">0.0000, 0.0000</span>
+    </div>
+
+    <!-- Custom Layer List -->
+    <div id="customLayerList" class="custom-layer-list">
+      <div class="layer-list-header">
+        <h3>طبقات الخريطة</h3>
+        <button id="closeLayerList" class="close-btn">&times;</button>
+      </div>
+      <div id="layerListContent" class="layer-list-content">
+        <!-- Dynamic layer content will be inserted here -->
+      </div>
+    </div>
+
+    <!-- Classification Panel -->
+    <div id="classificationPanel" class="classification-panel hidden">
+      <div class="classification-header">
+        <h3>تصنيف الطبقة</h3>
+        <button id="closeClassification" class="close-btn">&times;</button>
+      </div>
+      
+      <div class="classification-content">
+        <div class="field-selection">
+          <label for="fieldSelect">اختر الحقل للتصنيف:</label>
+          <select id="fieldSelect" class="field-select">
+            <option value="">-- اختر حقل --</option>
+          </select>
+        </div>
+        
+        <div class="field-info" id="fieldInfo" style="display: none;">
+          <h4>إحصائيات الحقل:</h4>
+          <div class="stats-content"></div>
+        </div>
+        
+        <div class="classification-buttons">
+          <button id="applyClassification" class="apply-btn">تطبيق التصنيف</button>
+          <button id="resetRenderer" class="reset-btn">إعادة تعيين</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Info Panel -->
+    <div id="featurePanel" class="feature-panel hidden">
+      <div class="feature-header">
+        <h3>Feature Information</h3>
+        <button id="closeFeature" class="close-btn">&times;</button>
+      </div>
+      <div id="featureContent" class="feature-content">
+        <!-- Dynamic content will be inserted here -->
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <p>Processing shapefile...</p>
+      </div>
+    </div>
+  
+    <!-- Map Legend -->
+    <div id="mapLegend" class="map-legend hidden">
+      <div class="legend-title">وسيلة الإيضاح</div>
+      <div class="legend-items"></div>
+    </div>
+    
+  </div>
+
+  <script src="https://js.arcgis.com/4.33/"></script>
+  <script src="src/gis-explorer.js"></script>
+</body>
+
+</html>
