@@ -769,7 +769,7 @@ html, body {
 }
 
 .map-legend.hidden {
-  display: none;
+  /* display: none; */
 }
 
 .legend-title {
@@ -1079,4 +1079,45 @@ html, body {
 .feature-content::-webkit-scrollbar-thumb:hover,
 .layer-list-content::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+
+
+/* Classification Loading Styles */
+.classification-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  z-index: 2000;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.classification-loading.hidden {
+  display: none;
+}
+
+.classification-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.classification-loading-gif {
+  width: 100px;
+  height: 100px;
+}
+
+.classification-loading p {
+  margin: 0;
+  color: #374151;
+  font-size: 16px;
+  font-weight: 500;
 }

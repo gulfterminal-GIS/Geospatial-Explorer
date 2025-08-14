@@ -11,6 +11,7 @@ let currentHighlight;
 let uploadedLayers = [];
 let currentClassificationLayer = null;
 
+
 // ========================================
 // UTILITY: MODULE LOADER
 // ========================================
@@ -843,6 +844,9 @@ async function addGeoJSONToMap(geoJSONData, layerName) {
       spatialReference: { wkid: 4326 }
     });
     
+
+
+
     // Add layer to map
     displayMap.add(featureLayer);
     uploadedLayers.push(featureLayer);
@@ -1610,10 +1614,12 @@ function createMapLegend(stats, colors, fieldName) {
   mapLegend.classList.remove('hidden');
 }
 
+
 // ========================================
 // DATA: STATIC GEOJSON LAYER
 // ========================================
 async function loadStaticGeoJSONLayer() {
+  console.log("🟢 Starting to load static GeoJSON layer...");
   try {
     const geoJSONData = {
       "type": "FeatureCollection",
@@ -2410,12 +2416,129 @@ async function loadStaticGeoJSONLayer() {
     };
     
     // Add to map using existing function
-    await addGeoJSONToMap(geoJSONData, 'الطبقة الثابتة');
-    
+    await addGeoJSONToMap(geoJSONData, 'مشروع المياه نزع التعاون');
+
+    console.log("🟢 Static layer added to map. Total layers:", displayMap.allLayers.length);
+    console.log("🟢 All layers:", displayMap.allLayers.items);
+
+
+    // Wait a bit for layer to fully initialize
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Find the static layer
+    const staticLayer = displayMap.allLayers.find(layer => 
+      layer.title === 'مشروع المياه نزع التعاون'
+    );
+
+    console.log("🟢 Found static layer:", staticLayer);
+
+    if (staticLayer) {
+      console.log("🟢 Layer fields:", staticLayer.fields);
+      console.log("🟢 Layer features count:", staticLayer.source?.length);
+      
+      // Check if we have the الاستخدام field
+      const usageField = staticLayer.fields.find(field => field.name === 'الاستخدام');
+      console.log("🟢 Usage field found:", usageField);
+      
+      // Log all field names to verify
+      console.log("🟢 All field names:", staticLayer.fields.map(f => f.name));
+    }
+
+    // Apply auto-classification
+    await autoClassifyStaticLayer();
+
+
   } catch (error) {
     console.error('Error loading static GeoJSON layer:', error);
   }
 }
+
+
+// Auto-classify the static layer
+async function autoClassifyStaticLayer() {
+  console.log("🔵 Starting auto-classification...");
+  
+  // Find the static layer
+  const staticLayer = displayMap.allLayers.find(layer => 
+    layer.title === 'مشروع المياه نزع التعاون'
+  );
+  
+  if (!staticLayer) {
+    console.error("❌ Static layer not found for classification");
+    return;
+  }
+  
+  // Set as current classification layer
+  currentClassificationLayer = staticLayer;
+  
+  console.log("🔵 Applying classification for field: الاستخدام");
+
+  try {
+  // Get field statistics
+  const stats = await analyzeFieldValues(staticLayer, 'الاستخدام');
+  
+  if (!stats || stats.uniqueCount === 0) {
+    console.error("❌ No valid values found for classification");
+    return;
+  }
+  
+  console.log("🔵 Field statistics:", stats);
+  
+  // Generate colors
+  const colors = generateColors(stats.sortedValues.length);
+  
+  // Create unique value infos
+  const uniqueValueInfos = stats.sortedValues.map(([value, count], index) => {
+    const color = colors[index];
+    
+    return {
+      value: value,
+      symbol: {
+        type: "simple-fill",
+        color: [...color, 0.7],
+        outline: {
+          color: color,
+          width: 2
+        }
+      },
+      label: `${value} (${count})`
+    };
+  });
+  
+  // Create and apply the renderer
+  const renderer = {
+    type: "unique-value",
+    field: "الاستخدام",
+    uniqueValueInfos: uniqueValueInfos,
+    defaultSymbol: createDefaultSymbol("polygon"),
+    defaultLabel: "أخرى"
+  };
+  
+  staticLayer.renderer = renderer;
+  console.log("🔵 Renderer applied successfully");
+  
+  // Create and show legend
+  createMapLegend(stats, colors, "الاستخدام");
+  console.log("🔵 Legend created and displayed");
+// Show classification loading
+const classificationLoading = document.getElementById('classificationLoading');
+classificationLoading.classList.remove('hidden');
+
+  // Add small delay to ensure loading is visible
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  // Hide loading
+  classificationLoading.classList.add('hidden');
+
+} catch (error) {
+  console.error("❌ Error in auto-classification:", error);
+  // Hide loading on error
+  classificationLoading.classList.add('hidden');
+}
+
+  
+  // We'll add the classification logic next
+}
+
 
 // ========================================
 // MAIN: APPLICATION INITIALIZATION
